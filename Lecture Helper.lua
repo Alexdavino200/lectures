@@ -11,9 +11,9 @@ encoding.default = 'CP1251'
 local u8 = encoding.UTF8
 
 -- ==========================================================
--- ССЫЛКА НА ФАЙЛ СКРИПТА (ВЛОЖЕНИЕ ИЗ ДИСКОРДА)
+-- ПРЯМАЯ RAW-ССЫЛКА НА ФАЙЛ СКРИПТА С GITHUB
 -- ==========================================================
-local UPDATE_URL = "СЮДА_ВСТАВЬ_ССЫЛКУ_ИЗ_ДИСКОРДА"
+local UPDATE_URL = "СЮДА_ВСТАВЬ_RAW_ССЫЛКУ_С_GITHUB"
 
 function chatMsg(text)
     sampAddChatMessage(u8:decode(text), -1)
@@ -214,11 +214,13 @@ function loadLocalData(is_manual)
     return false
 end
 
--- Функция автообновления через Discord
+-- Функция проверки обновлений с GitHub с детальными сообщениями в чат
 function checkForUpdates()
     if UPDATE_URL == "" or UPDATE_URL:find("СЮДА_ВСТАВЬ") then return end
 
     local temp_path = config_dir .. "\\temp_update.lua"
+    chatMsg("{00BFFF}[Lecture Helper]{FFFFFF} Проверка обновлений...")
+
     downloadUrlToFile(UPDATE_URL, temp_path, function(id, status, p1, p2)
         if status == dlstatus.DOWNLOAD_COMPLETE then
             local file = io.open(temp_path, "r")
@@ -230,16 +232,23 @@ function checkForUpdates()
                 local remote_version = content:match('script_version%s*%(%s*["\']([^"\']+)["\']%s*%)')
                 
                 if remote_version and remote_version ~= this_script_version then
-                    chatMsg(string.format("{00BFFF}[Lecture Helper]{FFFFFF} Найдена новая версия ({00BFFF}%s{FFFFFF}). Скачиваю...", remote_version))
+                    chatMsg(string.format("{00BFFF}[Lecture Helper]{FFFFFF} Найдена новая версия: {00BFFF}%s{FFFFFF} (у вас: %s)", remote_version, this_script_version))
+                    chatMsg("{00BFFF}[Lecture Helper]{FFFFFF} Скачиваю файл обновления...")
                     
                     downloadUrlToFile(UPDATE_URL, this_script_path, function(id2, status2)
                         if status2 == dlstatus.DOWNLOAD_COMPLETE then
-                            chatMsg("{00BFFF}[Lecture Helper]{FFFFFF} Обновление установлено! Перезагружаю скрипт...")
+                            chatMsg("{00BFFF}[Lecture Helper]{FFFFFF} Файл успешно скачан! Перезагружаю скрипт...")
                             this_script():reload()
+                        elseif status2 == dlstatus.DOWNLOAD_ERROR then
+                            chatMsg("{00BFFF}[Lecture Helper]{FF4444} Ошибка при скачивании файла обновления.")
                         end
                     end)
+                else
+                    chatMsg("{00BFFF}[Lecture Helper]{FFFFFF} У вас установлена актуальная версия скрипта.")
                 end
             end
+        elseif status == dlstatus.DOWNLOAD_ERROR then
+            -- Ошибку сети при старте можно не выводить назойливо, либо сделать тихо
         end
     end)
 end
@@ -317,13 +326,14 @@ function main()
     end
     updateBuffers()
 
-    -- Фоновая проверка обновлений из Discord через 2 секунды после запуска
+    -- Выводим текущую версию при запуске в чат
+    chatMsg(string.format("{00BFFF}[Lecture Helper]{FFFFFF} Запущен! Версия: {00BFFF}%s{FFFFFF}. Меню: {00BFFF}/lec", this_script_version))
+
+    -- Фоновая проверка обновлений с GitHub через 2 секунды после запуска
     lua_thread.create(function()
         wait(2000)
         checkForUpdates()
     end)
-
-    chatMsg("{00BFFF}[Lecture Helper]{FFFFFF} Скрипт успешно запущен! Меню: {00BFFF}/lec")
 
     sampRegisterChatCommand("lec", function()
         renderWindow[0] = not renderWindow[0]
