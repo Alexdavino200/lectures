@@ -1,6 +1,6 @@
 script_name("Lecture Helper")
 script_author("User & Gemini")
-script_version("4.0") -- Текущая версия скрипта
+script_version("4.1") -- Текущая версия скрипта
 
 require "lib.moonloader"
 local imgui = require "mimgui"
@@ -13,7 +13,7 @@ local u8 = encoding.UTF8
 -- ==========================================================
 -- ПРЯМАЯ RAW-ССЫЛКА НА ФАЙЛ СКРИПТА С GITHUB
 -- ==========================================================
-local UPDATE_URL = "СЮДА_ВСТАВЬ_RAW_ССЫЛКУ_С_GITHUB"
+local UPDATE_URL = "https://raw.githubusercontent.com/Alexdavino200/lectures/refs/heads/main/Lecture%20Helper.lua"
 
 function chatMsg(text)
     sampAddChatMessage(u8:decode(text), -1)
